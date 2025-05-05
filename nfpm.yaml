@@ -12,8 +12,8 @@ provides:
 - apt-s3
 depends:
 - ca-certificates
-maintainer: "Rob Bayerl <rbayerl@zendesk.com>"
-vendor: "Zendesk, Inc."
+maintainer: "Rob Bayerl <rbayerl@badsmoke.com>"
+vendor: "badsmoke, Inc."
 description: |
   apt transport method for repositories hosted in S3.
 homepage: "https://github.com/rbayerl/apt-s3"

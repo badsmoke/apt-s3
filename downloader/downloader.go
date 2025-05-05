@@ -67,41 +67,57 @@ func (d *Downloader) credentialsFromFile(fileName string) (string, string, strin
 // not exist
 func (d *Downloader) loadCredentials(region string) (*session.Session, error) {
 	var config aws.Config
-	var sess *session.Session
 
+	// Lese benutzerdefinierten Endpoint
+	endpoint := os.Getenv("S3_ENDPOINT")
+	useSSL := os.Getenv("S3_USE_SSL") != "false" 
+
+	// Credentials laden
 	if _, err := os.Stat("/etc/apt/s3creds"); err == nil {
 		accessKey, secretKey, token, err := d.credentialsFromFile("/etc/apt/s3creds")
 		if err != nil {
 			return nil, err
 		}
 		config = aws.Config{
-			Region:      aws.String(region),
-			Credentials: credentials.NewStaticCredentials(accessKey, secretKey, token),
+			Region:           aws.String(region),
+			Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, token),
+			Endpoint:         aws.String(endpoint),
+			S3ForcePathStyle: aws.Bool(true),
+			DisableSSL:       aws.Bool(!useSSL),
 		}
 	} else if os.IsNotExist(err) {
-		config = aws.Config{Region: aws.String(region)}
+		config = aws.Config{
+			Region:           aws.String(region),
+			Endpoint:         aws.String(endpoint),
+			S3ForcePathStyle: aws.Bool(true),
+			DisableSSL:       aws.Bool(!useSSL),
+		}
 	}
-	sess, err := session.NewSession(&config)
 
+	sess, err := session.NewSession(&config)
 	return sess, err
 }
 
 // parseUri takes an S3 URI s3://<bucket>.s3-<region>.amazonaws.com/key/file
 // and returns the bucket, region, key, and filename
-func (d *Downloader) parseURI(keyString string) (string, string, string, string) {
-	var region string
-	ss := strings.Split(keyString, "/")
-	bucketSs := strings.Split(ss[2], ".")
-	bucket := bucketSs[0]
-	regionSs := strings.Split(bucketSs[1], "-")
-	// Default to us-east-1 if just <bucket>.s3.amazonaws.com is passed
-	if len(regionSs) == 1 {
-		region = "us-east-1"
-	} else {
-		region = strings.Join(regionSs[1:], "-")
+func (d *Downloader) parseURI(uri string) (string, string, string, string) {
+	uri = strings.TrimPrefix(uri, "s3://")
+	parts := strings.SplitN(uri, "/", 2)
+
+	if len(parts) < 2 {
+		return "", "", "", ""
 	}
-	key := strings.Join(ss[3:], "/")
-	filename := ss[len(ss)-1]
+
+	bucket := parts[0]
+	key := parts[1]
+	filename := parts[len(parts)-1]
+
+	// default region 
+	region := os.Getenv("AWS_DEFAULT_REGION")
+	if region == "" {
+		region = "us-east-1"
+	}
+
 	return bucket, region, key, filename
 }
 

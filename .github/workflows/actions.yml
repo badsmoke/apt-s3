@@ -14,10 +14,10 @@ jobs:
           - "1.12"
           - "1.11"
     steps:
-    - uses: zendesk/checkout@v2
+    - uses: badsmoke/checkout@v2
       with:
         fetch-depth: 0
-    - uses: zendesk/setup-go@v2
+    - uses: badsmoke/setup-go@v2
       with:
         go-version: ${{ matrix.go }}
     - name: test go ${{ matrix.go }}

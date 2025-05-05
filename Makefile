@@ -25,7 +25,7 @@ release: $(PACKAGE_TARGETS) tag
 ifndef GITHUB_TOKEN
 	$(error GITHUB_TOKEN is not set!)
 endif
-	$(eval URL := $(shell curl -sS -H "Authorization: token $$GITHUB_TOKEN" -H "Content-Type: application/json" -X POST -d '{"tag_name":"$(VERSION)","name":"v$(VERSION)"}' https://api.github.com/repos/zendesk/apt-s3/releases | awk -F\" /assets_url/'{sub(/api/, "uploads", $$4); print $$4 }'))
+	$(eval URL := $(shell curl -sS -H "Authorization: token $$GITHUB_TOKEN" -H "Content-Type: application/json" -X POST -d '{"tag_name":"$(VERSION)","name":"v$(VERSION)"}' https://api.github.com/repos/badsmoke/apt-s3/releases | awk -F\" /assets_url/'{sub(/api/, "uploads", $$4); print $$4 }'))
 	$(foreach arch,$(ARCHITECTURES),\
 		$(shell curl -sS -H "Authorization: token $$GITHUB_TOKEN" -H "Content-Type: application/octet-stream" -X POST --data-binary "@apt-s3_$(VERSION)_$(arch)" $(URL)?name=apt-s3_$(VERSION)_$(arch) >/dev/null)\
 		$(shell curl -sS -H "Authorization: token $$GITHUB_TOKEN" -H "Content-Type: application/octet-stream" -X POST --data-binary "@apt-s3_$(VERSION)_$(arch).deb" $(URL)?name=apt-s3_$(VERSION)_$(arch).deb >/dev/null)\

@@ -1,5 +1,5 @@
 # apt-s3
-![repo-checks](https://github.com/zendesk/apt-s3/workflows/repo-checks/badge.svg)
+![repo-checks](https://github.com/badsmoke/apt-s3/workflows/repo-checks/badge.svg)
 
 `apt-s3` is an [APT Method Interface](http://www.fifi.org/doc/libapt-pkg-doc/method.html/) written in Go to use a private S3 bucket as an `apt` repository on Debian based systems. Similar projects exist, but they all have their caveats:
   * Many are completely unmaintained
@@ -16,7 +16,7 @@
 
 The only requirement for `apt-s3` is the `ca-certificates` package and its dependencies.
 
-Installation is as easy as downloading the binary or deb package from our [releases](https://github.com/zendesk/apt-s3/releases) page.
+Installation is as easy as downloading the binary or deb package from our [releases](https://github.com/badsmoke/apt-s3/releases) page.
 
 ### Package Installation
 

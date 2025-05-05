@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/zendesk/apt-s3/method"
+	"github.com/badsmoke/apt-s3/method"
 )
 
 var (
@@ -29,8 +29,8 @@ func main() {
 		os.Exit(0)
 		// Called outside of apt to download a file
 	} else if *downloadUri != "" {
-		if match, _ := regexp.MatchString("s3://.*\\.s3.*\\.amazonaws\\.com/.*", *downloadUri); !match {
-			log.Fatalf("Incorrect bucket format.\nExpected: s3://<bucket>.s3-<region>.amazonaws.com/path/to/file\n")
+		if match, _ := regexp.MatchString("s3://.*", *downloadUri); !match {
+			log.Fatalf("Incorrect bucket format...")
 		} else {
 			filename, err := m.Downloader.DownloadFile(*downloadUri, *downloadPath)
 			if err != nil {
