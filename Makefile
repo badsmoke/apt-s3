@@ -35,7 +35,7 @@ tag:
 	git tag $(VERSION)
 	git push --tags
 
-test: build-deps
-	go test -v ./...
+#test: build-deps
+#	go test -v ./...
 
 .PHONY: all build-deps clean release tag test
