@@ -35,12 +35,12 @@ func (d *Downloader) getValue(line string) string {
 }
 
 // credentialsFromFile loads AWS credentials from a non-standard path
-func (d *Downloader) credentialsFromFile(fileName string) (string, string, string, error) {
-	var accessKey, secretKey, token string
+func (d *Downloader) credentialsFromFile(fileName string) (string, string, string, string, string, error) {
+	var accessKey, secretKey, token, endpoint, region string
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", "", err
 	}
 	defer file.Close()
 
@@ -53,13 +53,17 @@ func (d *Downloader) credentialsFromFile(fileName string) (string, string, strin
 			secretKey = d.getValue(scanner.Text())
 		case strings.Contains(scanner.Text(), "aws_session_token"):
 			token = d.getValue(scanner.Text())
+		case strings.Contains(scanner.Text(), "s3_endpoint"):
+			endpoint = d.getValue(scanner.Text())
+		case strings.Contains(scanner.Text(), "region"):
+			region = d.getValue(scanner.Text())
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return "", "", "", err
+		return "", "", "", "", "", err
 	}
 
-	return accessKey, secretKey, token, nil
+	return accessKey, secretKey, token, endpoint, region, nil
 }
 
 // loadCredentials sets up a Session using credentials found in /etc/apt/s3creds
@@ -67,30 +71,29 @@ func (d *Downloader) credentialsFromFile(fileName string) (string, string, strin
 // not exist
 func (d *Downloader) loadCredentials(region string) (*session.Session, error) {
 	var config aws.Config
+	var sess *session.Session
 
-	// Lese benutzerdefinierten Endpoint
-	endpoint := os.Getenv("S3_ENDPOINT")
-	useSSL := os.Getenv("S3_USE_SSL") != "false" 
-
-	// Credentials laden
 	if _, err := os.Stat("/etc/apt/s3creds"); err == nil {
-		accessKey, secretKey, token, err := d.credentialsFromFile("/etc/apt/s3creds")
+		accessKey, secretKey, token, endpoint, regionFromFile, err := d.credentialsFromFile("/etc/apt/s3creds")
+		if regionFromFile != "" {
+			region = regionFromFile
+		}
 		if err != nil {
 			return nil, err
 		}
 		config = aws.Config{
-			Region:           aws.String(region),
-			Credentials:      credentials.NewStaticCredentials(accessKey, secretKey, token),
-			Endpoint:         aws.String(endpoint),
-			S3ForcePathStyle: aws.Bool(true),
-			DisableSSL:       aws.Bool(!useSSL),
+			Region:      aws.String(region),
+			Credentials: credentials.NewStaticCredentials(accessKey, secretKey, token),
+		}
+		if endpoint != "" {
+			config.Endpoint = aws.String(endpoint)
+			config.S3ForcePathStyle = aws.Bool(true)
 		}
 	} else if os.IsNotExist(err) {
+		// Anonymous credentials for public MinIO/S3
 		config = aws.Config{
-			Region:           aws.String(region),
-			Endpoint:         aws.String(endpoint),
-			S3ForcePathStyle: aws.Bool(true),
-			DisableSSL:       aws.Bool(!useSSL),
+			Region:      aws.String(region),
+			Credentials: credentials.AnonymousCredentials,
 		}
 	}
 
@@ -112,13 +115,8 @@ func (d *Downloader) parseURI(uri string) (string, string, string, string) {
 	key := parts[1]
 	filename := parts[len(parts)-1]
 
-	// default region 
-	region := os.Getenv("AWS_DEFAULT_REGION")
-	if region == "" {
-		region = "us-east-1"
-	}
-
-	return bucket, region, key, filename
+	// Region wird jetzt nur noch in loadCredentials verwendet
+	return bucket, "", key, filename
 }
 
 // GetFileAttributes queries the object in S3 and returns the timestamp and
