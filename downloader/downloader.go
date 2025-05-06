@@ -125,7 +125,7 @@ func (d *Downloader) GetFileAttributes(s3Uri string) (string, int64, error) {
 	var err error
 	bucket, region, key, _ := d.parseURI(s3Uri)
 
-	if d.region != region {
+	if d.sess == nil || d.region != region {
 		d.region = region
 		d.sess, err = d.loadCredentials(region)
 		if err != nil {
@@ -157,13 +157,14 @@ func (d *Downloader) DownloadFile(s3Uri string, path string) (string, error) {
 		filename = path
 	}
 
-	if d.region != region {
+	if d.sess == nil || d.region != region {
 		d.region = region
 		d.sess, err = d.loadCredentials(region)
 		if err != nil {
 			return "", err
 		}
 	}
+
 	downloader := s3manager.NewDownloader(d.sess)
 
 	f, err := os.Create(filename)
