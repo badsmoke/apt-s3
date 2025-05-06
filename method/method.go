@@ -120,7 +120,7 @@ func (m *Method) handleError(uri string, err error) {
 
 // Start watches os.Stdin for a "600 URI Acquire" message from apt which
 // triggers UriStart
-func (m *Method) Start() {
+func (m *Method) Start() error {
 	var lines []string
 	scanner := bufio.NewScanner(os.Stdin)
 	m.sendCapabilities()
@@ -133,11 +133,18 @@ func (m *Method) Start() {
 			if len(lines) > 0 {
 				if lines[0] == "600 URI Acquire" {
 					if err := m.UriStart(lines); err != nil {
-						m.handleError(strings.Split(lines[1], ": ")[1], err)
+						// Gib Fehler zurück, statt os.Exit aufzurufen
+						return fmt.Errorf("URI Acquire failed: %w", err)
 					}
 				}
 				lines = make([]string, 0)
 			}
 		}
 	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("error reading stdin: %w", err)
+	}
+
+	return nil
 }

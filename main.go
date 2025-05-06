@@ -27,19 +27,19 @@ func main() {
 	if *versionFlag {
 		fmt.Printf("%s %s (Go version: %s)\n", programName, Version, runtime.Version())
 		os.Exit(0)
+		// Called outside of apt to download a file
 	} else if *downloadUri != "" {
-		if match, _ := regexp.MatchString(`^s3://.*`, *downloadUri); !match {
+		if match, _ := regexp.MatchString("s3://.*", *downloadUri); !match {
 			log.Fatalf("Incorrect bucket format...")
 		} else {
 			filename, err := m.Downloader.DownloadFile(*downloadUri, *downloadPath)
 			if err != nil {
-				log.Fatalf("Download failed: %v", err)
+				log.Fatal(err)
 			}
 			fmt.Printf("Downloaded %s\n", filename)
 			os.Exit(0)
 		}
 	} else {
-		// APT mode – transport method
 		if err := m.Start(); err != nil {
 			log.Printf("apt-s3 failed: %v", err)
 			os.Exit(1)
